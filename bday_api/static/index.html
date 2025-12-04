@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Birthday Management</title>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: 2rem auto; }
+    form { margin-bottom: 1rem; display: flex; gap: 0.5rem; }
+    input { padding: 0.3rem; }
+    button { padding: 0.3rem 0.6rem; cursor: pointer; }
+    ul { list-style: none; padding: 0; }
+    li { padding: 0.25rem 0; display: flex; justify-content: space-between; }
+    .id { color: #888; font-size: 0.8rem; margin-right: 0.5rem; }
+  </style>
+</head>
+<body>
+  <h1>Birthdays</h1>
+
+  <div id="login-section">
+    <form id="login-form">
+      <input type="password" name="password" placeholder="Password" required />
+      <button type="submit">Login</button>
+    </form>
+    <p id="login-error" style="color:red; display:none;">Invalid password</p>
+  </div>
+
+  <form id="bday-form">
+    <input name="name" placeholder="Name" required />
+    <input name="bday" type="date" required />
+    <button type="submit">Add</button>
+  </form>
+
+  <ul id="bday-list"></ul>
+
+<script>
+  const apiBase = '';
+
+  async function load() {
+    const res = await fetch(`${apiBase}/bday`, { credentials: 'include' });
+    if (res.status === 401) {
+      // not logged in or session expired
+      showLogin();
+      return;
+    }
+    const data = await res.json();
+    const list = document.getElementById('bday-list');
+    list.innerHTML = '';
+
+    data.forEach(row => {
+      const li = document.createElement('li');
+      li.innerHTML = `
+        <span>
+          <span class="id">#${row.id}</span>
+          <strong>${row.name}</strong> — ${row.bday}
+        </span>
+      `;
+
+      const delBtn = document.createElement('button');
+      delBtn.textContent = 'Delete';
+      delBtn.onclick = () => delBday(row.id);
+
+      const toggleBtn = document.createElement('button');
+      toggleBtn.textContent = row.notify_7days ? 'Disable 7-day' : 'Enable 7-day';
+      toggleBtn.style.backgroundColor = row.notify_7days ? '#8f8' : '#f88';
+      toggleBtn.onclick = async () => {
+        await fetch(`${apiBase}/bday/${row.id}/toggle_notify`, {
+          method: 'PUT',
+          credentials: 'include'
+        });
+        load();
+      };
+
+      const btnContainer = document.createElement('span');
+      btnContainer.appendChild(toggleBtn);
+      btnContainer.appendChild(delBtn);
+      li.appendChild(btnContainer);
+      list.appendChild(li);
+    });
+
+    showApp();
+  }
+
+  async function delBday(id) {
+    await fetch(`${apiBase}/bday/${id}`, {
+      method: 'DELETE',
+      credentials: 'include'
+    });
+    load();
+  }
+
+  document.getElementById('bday-form').onsubmit = async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const payload = {
+      name: form.name.value,
+      bday: form.bday.value
+    };
+    await fetch(`${apiBase}/bday`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      credentials: 'include'
+    });
+    form.reset();
+    load();
+  };
+
+  // Login form handler
+  document.getElementById('login-form').onsubmit = async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const password = form.password.value;
+
+    const res = await fetch(`${apiBase}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password }),
+      credentials: 'include'
+    });
+
+    if (res.ok) {
+      document.getElementById('login-error').style.display = 'none';
+      form.reset();
+      load();
+    } else {
+      document.getElementById('login-error').style.display = 'block';
+    }
+  };
+
+  function showLogin() {
+    document.getElementById('login-section').style.display = 'block';
+    document.getElementById('app').style.display = 'none';
+  }
+
+  function showApp() {
+    document.getElementById('login-section').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+  }
+
+  // Initial load – will show login if not authenticated
+  load();
+</script>
+
+
+</body>
+</html>
