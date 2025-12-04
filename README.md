@@ -10,7 +10,7 @@ Installation and Setup
 
 1. Installation
 git clone https://github.com/aidantambling/bday-reminder.git
-cd bday
+cd bday-reminder
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt

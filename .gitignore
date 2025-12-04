@@ -4,6 +4,4 @@ bday.log
 __pycache__/
 bday_api/__pycache__/
 
-data/*
-!data/.gitkeep
-!data/init_db.sh
+data/*.db
