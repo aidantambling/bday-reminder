@@ -1,8 +1,14 @@
 #!/usr/bin/env bash
 set -e
 
-mkdir -p data
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
-sqlite3 data/birthdays.db < schema.sql
+DB_FILE="$PROJECT_ROOT/data/birthdays.db"
+SCHEMA_FILE="$SCRIPT_DIR/schema.sql"
 
-echo "Created data/birthdays.db"
+mkdir -p "$PROJECT_ROOT/data"
+
+sqlite3 "$DB_FILE" < "$SCHEMA_FILE"
+
+echo "Created $DB_FILE"
